@@ -9324,7 +9324,8 @@ function openPatch(){let d=$('patchP');if(d)d.remove();d=document.createElement(
   const ok=document.createElement('button');ok.textContent=LANG==='ko'?'게임 시작':LANG==='it'?'Gioca':'Play';ok.style.cssText='display:block;width:100%;margin-top:12px;padding:12px;border:0;border-radius:12px;background:#22272b;color:#fff;font:800 15px system-ui;cursor:pointer';
   ok.onclick=e=>{e.stopPropagation();d.remove();try{localStorage.setItem('cc_patch',PATCH_VER)}catch(e2){}};b.append(ok);d.append(b);d.addEventListener('click',e=>{if(e.target===d)ok.click()});document.body.append(d)}
 var PATCHT={shown:false,t:0};
-function patchTick(dt){PATCHT.t+=dt;if(!$('patchBtn')){const w=$('transBtn')||$('worldBtn');if(w){const b=document.createElement('button');b.className='ghost';b.id='patchBtn';b.textContent='📰';b.title='Patch notes';b.addEventListener('click',e=>{e.stopPropagation();openPatch()});w.parentNode.insertBefore(b,w.nextSibling)}}
+var IN_CLAUDE=(function(){try{if(/claude/i.test(location.hostname))return true;return window.top!==window}catch(e){return true}})();
+function patchTick(dt){if(!IN_CLAUDE)return;PATCHT.t+=dt;if(!$('patchBtn')){const w=$('transBtn')||$('worldBtn');if(w){const b=document.createElement('button');b.className='ghost';b.id='patchBtn';b.textContent='📰';b.title='Patch notes';b.addEventListener('click',e=>{e.stopPropagation();openPatch()});w.parentNode.insertBefore(b,w.nextSibling)}}
   if(PATCHT.shown)return;const sp=$('splash');if(sp&&!sp.classList.contains('out'))return;PATCHT.shown=true;let seen=null;try{seen=localStorage.getItem('cc_patch')}catch(e){}if(seen!==PATCH_VER)openPatch()}
 var V85T=0;function v85Frame(dt){V85T-=dt;if(V85T>0)return;V85T=.5;try{patchTick(.5)}catch(e){}}
 
@@ -15966,6 +15967,8 @@ function v176Carve(p){const L=p&&p._v176k;if(!L||!L.length||!p.g)return 0;p._v17
   (V102.v176c=V102.v176c||{})[p.id]=((V102.v176c||{})[p.id]||0)+n;return n}
 (()=>{const _mc=makeCity;makeCity=function(d){const had=self.CITYW&&CITYW[d.id];const p=_mc.apply(this,arguments);if(!had&&p)try{v176Carve(p)}catch(e){console.warn('v176 carve',e)}return p}})();
 (()=>{const _vc=v172Clear;v172Clear=function(p){const r=_vc.apply(this,arguments);try{v176Carve(p)}catch(e){console.warn('v176 carve',e)}return r}})();
+// v176 phones: cities you have left give their GPU buffers back (they upload again by themselves if you return), so the tab is not killed for memory
+(()=>{const _sw=setWorld;setWorld=function(w){if(self.CITYW&&CITYW[w])CITYW[w]._gpuFree=0;const r=_sw.apply(this,arguments);if(IS_TOUCH)setTimeout(()=>{try{for(const id in CITYW){const p=CITYW[id];if(!p||id===WORLD||!p.g||p._gpuFree)continue;p.g.traverse(o=>{if(o.geometry&&o.geometry.dispose)o.geometry.dispose()});p._gpuFree=1}}catch(e){console.warn('gpu free',e)}},1500);return r}})();
 // ---------- v164 diag: several views rendered into one picture and kept in the artifact's own store (for checking the work)
 (()=>{const _cd=ccDiag;ccDiag=function(cmd,a){if(cmd==='shotdb'){const getDb=async()=>(typeof FIXQ!=='undefined'&&FIXQ.db)||(window.claude&&window.claude.use?await window.claude.use('db'):null);const W=a.w||320,H=a.h||200,N=a.cams.length,cols=a.cols||2,cv=document.createElement('canvas');cv.width=W*cols;cv.height=H*Math.ceil(N/cols);const x=cv.getContext('2d');
     const urls=a.cams.map(c=>{const r=_cd('shot',{x:c[0],y:c[1],z:c[2],lx:c[3],ly:c[4],lz:c[5],w:W,h:H});return r&&r.url});window._sdb='busy';
